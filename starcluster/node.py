@@ -22,6 +22,7 @@ import base64
 import socket
 import posixpath
 import subprocess
+from boto.exception import EC2ResponseError
 
 from starcluster import utils
 from starcluster import static
@@ -197,7 +198,16 @@ class Node(object):
         return self.instance.tags
 
     def add_tag(self, key, value=None):
-        return self.instance.add_tag(key, value)
+        tries = range(5)
+        last_try = tries[-1]
+        for i in tries:
+            try:
+                return self.instance.add_tag(key, value)
+            except EC2ResponseError as ex:
+                if i == last_try or 'InvalidInstanceID.NotFound' not in ex.message:
+                    log.debug("failed to add tag")
+                    raise
+                time.sleep(5)
 
     def remove_tag(self, key, value=None):
         return self.instance.remove_tag(key, value)
