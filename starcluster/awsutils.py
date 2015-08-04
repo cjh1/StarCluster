@@ -1589,6 +1589,13 @@ class EasyEC2(EasyAWS):
         else:
             log.info("No console output available...")
 
+    def get_max_instances(self):
+        attribute = self.conn.describe_account_attributes(attribute_names=['max-instances'])
+        max_instances = attribute[0].attribute_values[0]
+        return int(max_instances)
+
+    def get_running_instance_count(self):
+        return len(self.conn.get_all_instances(filters={'instance-state-name': 'running'}))
 
 class EasyS3(EasyAWS):
     DefaultHost = 's3.amazonaws.com'

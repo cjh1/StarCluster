@@ -1881,6 +1881,20 @@ class ClusterValidator(validators.Validator):
             raise exception.ClusterValidationError(
                 "total number of nodes specified in node_instance_type (%s) "
                 "must be <= cluster_size-1 (%s)" % (num_itypes, num_nodes))
+
+        # Now check that the AWS account can create the required number of
+        # instances
+
+        # First get our max instance count for this account
+        max_instances = self.cluster.ec2.get_max_instances()
+        number_running_instances = self.cluster.ec2.get_running_instance_count()
+
+        if (max_instances - number_running_instances) < cluster.cluster_size:
+            raise exception.ClusterValidationError(
+                "A cluster size of '%d' is greater than the number of instances this " % cluster.cluster_size +
+                "account can currently create. There are currently '%d' instance " % number_running_instances +
+                "running. The maxium instance count is '%s'." % max_instances)
+
         return True
 
     def validate_cluster_user(self):
