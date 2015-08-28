@@ -252,6 +252,7 @@ EBS_VOLUME_SETTINGS = {
     'device': (str, False, None, None, None),
     'partition': (int, False, None, None, None),
     'mount_path': (str, True, None, None, None),
+    'fs': (str, False, None, None, None)
 }
 
 PLUGIN_SETTINGS = {

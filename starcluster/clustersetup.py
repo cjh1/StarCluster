@@ -327,6 +327,20 @@ class DefaultClusterSetup(ClusterSetup):
                         "Volume %s already mounted on %s...skipping" %
                         (vol_id, mount_path))
                 continue
+
+            # Before mounting check that we have a filesystem
+            output = master.ssh.execute('file -s %s' % volume_partition)
+
+            no_fs = '%s: data' % volume_partition
+            if len(output) == 1 and output[0] == no_fs:
+                fs_type = vol.get('fs')
+
+                if fs_type:
+                    log.info('Creating %s filesystem on %s'
+                             % (fs_type, volume_partition ))
+                    mkfs_cmd = 'mkfs -t %s %s' % (fs_type, volume_partition)
+                    master.ssh.execute(mkfs_cmd)
+
             master.mount_device(volume_partition, mount_path)
 
     def _get_nfs_export_paths(self):
