@@ -16,7 +16,7 @@
 # along with StarCluster. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import urllib
+import urllib2
 import StringIO
 import ConfigParser
 
@@ -100,8 +100,9 @@ class StarClusterConfig(object):
         self.cfg_file = config_file \
             or os.environ.get('STARCLUSTER_CONFIG') \
             or static.STARCLUSTER_CFG_FILE
-        self.cfg_file = os.path.expanduser(self.cfg_file)
-        self.cfg_file = os.path.expandvars(self.cfg_file)
+        if isinstance(self.cfg_file, str):
+            self.cfg_file = os.path.expanduser(self.cfg_file)
+            self.cfg_file = os.path.expandvars(self.cfg_file)
         self.type_validators = {
             int: self._get_int,
             float: self._get_float,
@@ -125,7 +126,7 @@ class StarClusterConfig(object):
     def _get_urlfp(self, url):
         log.debug("Loading url: %s" % url)
         try:
-            fp = urllib.urlopen(url)
+            fp = urllib2.urlopen(url)
             if fp.getcode() == 404:
                 raise exception.ConfigError("url %s does not exist" % url)
             fp.name = url
@@ -147,7 +148,7 @@ class StarClusterConfig(object):
 
     def _get_cfg_fp(self, cfg_file=None):
         cfg = cfg_file or self.cfg_file
-        if utils.is_url(cfg):
+        if utils.is_url(cfg) or isinstance(cfg, urllib2.Request):
             return self._get_urlfp(cfg)
         else:
             return self._get_fp(cfg)
